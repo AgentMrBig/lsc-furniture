@@ -1,65 +1,138 @@
-import Image from "next/image";
+import Link from "next/link";
+import FurnitureArt from "@/components/FurnitureArt";
+import PinterestBoards from "@/components/PinterestBoards";
+
+const featured = [
+  { kind: "table", title: "Dining Tables", desc: "Solid-wood tables sized to your room and your gatherings." },
+  { kind: "desk", title: "Desks & Offices", desc: "Work surfaces built around how you actually work." },
+  { kind: "shelf", title: "Built-ins & Shelving", desc: "Wall-to-wall storage that looks like it grew there." },
+  { kind: "credenza", title: "Credenzas & Consoles", desc: "Statement storage for dining rooms and entryways." },
+  { kind: "chair", title: "Seating", desc: "Benches, stools, and chairs built to be used daily." },
+  { kind: "bed", title: "Bedroom", desc: "Beds and nightstands made for a lifetime of mornings." },
+];
+
+const process = [
+  { n: "01", title: "Share your idea", desc: "Tell us what you need, the space it lives in, and the style you love — sketches, photos, and Pinterest pins all welcome." },
+  { n: "02", title: "Design & quote", desc: "We work up a design and a clear quote together. You'll know exactly what you're getting and what it costs." },
+  { n: "03", title: "Built by hand", desc: "Once the deposit is in, your piece gets built — real joinery, premium materials, finished to last." },
+  { n: "04", title: "Delivered home", desc: "We deliver and place it. You get furniture no one else in the world has." },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* Hero */}
+      <section className="border-b border-line">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-20 sm:py-28 lg:grid-cols-[3fr_2fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-brass">
+              Custom furniture, made to order
+            </p>
+            <h1 className="font-display mt-5 text-4xl font-medium leading-[1.08] tracking-tight sm:text-6xl">
+              Furniture built for <em className="italic text-walnut">your</em> life,
+              not a showroom floor.
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+              We design and build one-of-a-kind pieces — dining tables, desks,
+              built-ins, and more — shaped to your space, your style, and the
+              way you live. Solid materials. Honest joinery. No flat-pack anything.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link
+                href="/quote"
+                className="rounded-full bg-walnut px-7 py-3.5 font-medium text-background transition-colors hover:bg-brass"
+              >
+                Start Your Piece
+              </Link>
+              <Link
+                href="/portfolio"
+                className="rounded-full border border-walnut/30 px-7 py-3.5 font-medium transition-colors hover:border-brass hover:text-brass"
+              >
+                See Our Work
+              </Link>
+            </div>
+          </div>
+          <div className="hidden justify-center lg:flex">
+            <FurnitureArt kind="table" className="w-72 text-walnut/70" />
+          </div>
+        </div>
+      </section>
+
+      {/* What we build */}
+      <section className="mx-auto max-w-6xl px-5 py-20" aria-labelledby="what-we-build">
+        <h2 id="what-we-build" className="font-display text-3xl font-medium tracking-tight">
+          What we build
+        </h2>
+        <p className="mt-3 max-w-xl text-muted">
+          If you can sketch it on a napkin, we can build it in hardwood.
+        </p>
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((f) => (
+            <Link
+              key={f.title}
+              href="/portfolio"
+              className="group rounded-xl border border-line bg-surface p-7 transition-all hover:-translate-y-0.5 hover:border-brass/50 hover:shadow-sm"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              <FurnitureArt kind={f.kind} className="h-24 text-walnut/60 transition-colors group-hover:text-brass" />
+              <h3 className="font-display mt-5 text-xl font-medium">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{f.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Ideas — Pinterest boards */}
+      <section className="border-y border-line bg-surface/60" aria-labelledby="ideas">
+        <div className="mx-auto max-w-6xl px-5 py-20">
+          <h2 id="ideas" className="font-display text-3xl font-medium tracking-tight">
+            Need some furniture ideas?
+          </h2>
+          <p className="mt-3 max-w-2xl text-muted">
+            Browse the boards we keep of designs and finishes we love. See
+            something close to your vision? Mention it in your quote request and
+            we'll build from there.
           </p>
+          <div className="mt-10">
+            <PinterestBoards />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Process */}
+      <section className="mx-auto max-w-6xl px-5 py-20" aria-labelledby="process">
+        <h2 id="process" className="font-display text-3xl font-medium tracking-tight">
+          From idea to heirloom
+        </h2>
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {process.map((s) => (
+            <div key={s.n}>
+              <span className="font-display text-4xl font-light text-brass/50">{s.n}</span>
+              <h3 className="mt-3 font-medium">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{s.desc}</p>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-line bg-walnut text-background">
+        <div className="mx-auto max-w-6xl px-5 py-20 text-center">
+          <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
+            Have a piece in mind?
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-background/80">
+            Tell us about it — dimensions, materials, budget, and your ideas.
+            Upload sketches or photos, and we'll come back with a design and a
+            quote.
+          </p>
+          <Link
+            href="/quote"
+            className="mt-9 inline-block rounded-full bg-background px-8 py-3.5 font-medium text-walnut transition-opacity hover:opacity-90"
+          >
+            Request a Quote
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }

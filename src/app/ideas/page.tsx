@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import PinterestBoards from "@/components/PinterestBoards";
+import PinGrid from "@/components/PinGrid";
 
 export const metadata: Metadata = {
   title: "Furniture Ideas & Inspiration",
@@ -22,7 +22,7 @@ export default function IdeasPage() {
       </p>
 
       <div className="mt-12">
-        <PinterestBoards />
+        <PinGrid />
       </div>
 
       <div className="mt-16 rounded-xl border border-line bg-surface p-10 text-center">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FurnitureArt from "@/components/FurnitureArt";
-import PinterestBoards from "@/components/PinterestBoards";
+import PinGrid from "@/components/PinGrid";
+import pinData from "@/data/pinterest-pins.json";
 
 const featured = [
   { kind: "table", title: "Dining Tables", desc: "Solid-wood tables sized to your room and your gatherings." },
@@ -93,7 +94,15 @@ export default function Home() {
             we'll build from there.
           </p>
           <div className="mt-10">
-            <PinterestBoards />
+            <PinGrid limit={12} />
+          </div>
+          <div className="mt-8 text-center">
+            <Link
+              href="/ideas"
+              className="inline-block rounded-full border border-walnut/30 px-7 py-3 font-medium transition-colors hover:border-brass hover:text-brass"
+            >
+              Browse All {pinData.desks.length + pinData.finishes.length} Ideas
+            </Link>
           </div>
         </div>
       </section>

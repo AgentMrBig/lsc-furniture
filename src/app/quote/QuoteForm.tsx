@@ -1,37 +1,113 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
-import { submitQuoteRequest, type QuoteFormState } from "./actions";
+import { useRef, useState } from "react";
+import { site } from "@/lib/site";
 
-const initialState: QuoteFormState = { status: "idle", message: "" };
+// On the static GitHub Pages preview there is no server: the form composes
+// an email instead of creating an account. The full deployment posts to
+// /api/quote which stores the request and auto-creates the account.
+const IS_STATIC = process.env.NEXT_PUBLIC_STATIC === "1";
 
 const inputClass =
   "w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-muted/60 focus:border-brass";
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.heic,.pdf,.dxf";
 
+type FormState = { status: "idle" | "success" | "error"; message: string };
+
+function composeMailto(form: HTMLFormElement): string {
+  const fd = new FormData(form);
+  const get = (k: string) => String(fd.get(k) ?? "").trim();
+  const lines = [
+    "CUSTOM FURNITURE — QUOTE REQUEST",
+    "================================",
+    `Name:       ${get("name")}`,
+    `Email:      ${get("email")}`,
+    `Phone:      ${get("phone")}`,
+    `Piece:      ${get("furnitureType")}`,
+    `Room:       ${get("roomSpace")}`,
+    `Dimensions: W ${get("width") || "?"} × D ${get("depth") || "?"} × H ${get("height") || "?"} in`,
+    `Materials:  ${get("materials")}`,
+    `Finish:     ${get("finish")}`,
+    `Budget:     ${get("budget")}`,
+    `Timeline:   ${get("timeline")}`,
+    "",
+    "Idea:",
+    get("description"),
+    "",
+    "(Attach your photos/sketches/drawings to this email before sending.)",
+  ];
+  return `mailto:${site.email}?subject=${encodeURIComponent(
+    `Furniture Quote — ${get("name")}`
+  )}&body=${encodeURIComponent(lines.join("\n"))}`;
+}
+
 export default function QuoteForm() {
-  const [state, formAction, pending] = useActionState(submitQuoteRequest, initialState);
+  const [state, setState] = useState<FormState>({ status: "idle", message: "" });
+  const [pending, setPending] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [fileNames, setFileNames] = useState<string[]>([]);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+
+    if (IS_STATIC) {
+      // Preview site: open the visitor's email client with everything filled in.
+      window.location.href = composeMailto(form);
+      setState({
+        status: "success",
+        message:
+          "We opened a pre-filled email in your mail app — attach your photos and hit send. (On our full site this form submits directly and creates your project account.)",
+      });
+      return;
+    }
+
+    setPending(true);
+    setState({ status: "idle", message: "" });
+    try {
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        body: new FormData(form),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.ok) {
+        setState({ status: "success", message: data.message });
+      } else {
+        setState({
+          status: "error",
+          message: data?.message ?? "Something went wrong — please try again.",
+        });
+      }
+    } catch {
+      setState({
+        status: "error",
+        message: "Couldn't reach the server. Check your connection and try again, or email us directly.",
+      });
+    } finally {
+      setPending(false);
+    }
+  }
 
   if (state.status === "success") {
     return (
       <div className="rounded-xl border border-brass/40 bg-brass/5 p-10 text-center">
         <p className="font-display text-2xl font-medium">Request received ✓</p>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">{state.message}</p>
-        <a
-          href="/account"
-          className="mt-6 inline-block rounded-full bg-walnut px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-brass"
-        >
-          Track it in My Account
-        </a>
+        {!IS_STATIC && (
+          <a
+            href="/account"
+            className="mt-6 inline-block rounded-full bg-walnut px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-brass"
+          >
+            Track it in My Account
+          </a>
+        )}
       </div>
     );
   }
 
   return (
-    <form action={formAction} className="space-y-7">
+    <form onSubmit={onSubmit} className="space-y-7">
       <section>
         <h2 className="font-display text-lg font-medium">You</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -48,10 +124,12 @@ export default function QuoteForm() {
             <input name="phone" type="tel" autoComplete="tel" className={inputClass} placeholder="(555) 555-0100" />
           </label>
         </div>
-        <p className="mt-2 text-xs text-muted">
-          Submitting creates a free account under your email so you can track
-          your quote and project status.
-        </p>
+        {!IS_STATIC && (
+          <p className="mt-2 text-xs text-muted">
+            Submitting creates a free account under your email so you can track
+            your quote and project status.
+          </p>
+        )}
       </section>
 
       <section>
@@ -148,6 +226,7 @@ export default function QuoteForm() {
               : "Click to attach photos of your space, sketches, PDFs, or DXF drawings"}
             <span className="mt-1 block text-xs opacity-70">
               JPG · PNG · WEBP · HEIC · PDF · DXF — up to 8 files, 15 MB each
+              {IS_STATIC ? " (attached to the email on the preview site)" : ""}
             </span>
           </button>
           {fileNames.length > 0 && (
@@ -198,7 +277,7 @@ export default function QuoteForm() {
         disabled={pending}
         className="w-full rounded-full bg-walnut px-8 py-3.5 font-medium text-background transition-colors hover:bg-brass disabled:opacity-50 sm:w-auto"
       >
-        {pending ? "Sending your request…" : "Submit Quote Request"}
+        {pending ? "Sending your request…" : IS_STATIC ? "Compose Quote Email" : "Submit Quote Request"}
       </button>
     </form>
   );

@@ -21,7 +21,9 @@ export default function Footer() {
             <li><Link className="hover:text-brass" href="/ideas">Furniture Ideas</Link></li>
             <li><Link className="hover:text-brass" href="/about">About the Shop</Link></li>
             <li><Link className="hover:text-brass" href="/quote">Request a Quote</Link></li>
-            <li><Link className="hover:text-brass" href="/account">My Account</Link></li>
+            {process.env.NEXT_PUBLIC_STATIC !== "1" && (
+              <li><Link className="hover:text-brass" href="/account">My Account</Link></li>
+            )}
           </ul>
         </nav>
         <div className="text-sm">

@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+const IS_STATIC = process.env.NEXT_PUBLIC_STATIC === "1";
+
 const links = [
   { href: "/portfolio", label: "Portfolio" },
   { href: "/ideas", label: "Ideas" },
   { href: "/about", label: "About" },
-  { href: "/account", label: "My Account" },
+  // the account portal needs a server; hidden on the static Pages preview
+  ...(IS_STATIC ? [] : [{ href: "/account", label: "My Account" }]),
 ];
 
 export default function Header() {

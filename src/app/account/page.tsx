@@ -143,6 +143,39 @@ export default async function AccountPage() {
                     )}
                   </dl>
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">{r.description}</p>
+                  {(() => {
+                    let pins: Array<{ id: string; title: string; img: string }> = [];
+                    try {
+                      pins = r.pins ? JSON.parse(r.pins) : [];
+                    } catch {}
+                    if (!pins.length) return null;
+                    return (
+                      <div className="mt-4">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                          Inspiration you collected
+                        </p>
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {pins.map((p) => (
+                            <li key={p.id}>
+                              <a
+                                href={`https://www.pinterest.com/pin/${p.id}/`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={p.title || "View pin"}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={p.img}
+                                  alt={p.title || "Inspiration pin"}
+                                  className="h-16 w-16 rounded-md border border-line object-cover transition-transform hover:scale-105"
+                                />
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })()}
                   {files.length > 0 && (
                     <ul className="mt-3 flex flex-wrap gap-2 text-xs">
                       {files.map((f) => (

@@ -33,6 +33,30 @@ export async function POST(request: Request) {
   if (!name || !furnitureType || !description) {
     return bad("Please give us your name, the type of piece, and a description of your idea.");
   }
+
+  // Collected inspiration pins (validated, capped, stored as JSON).
+  let pins: Array<{ id: string; title: string; img: string }> = [];
+  try {
+    const raw = JSON.parse(get("pins") || "[]");
+    if (Array.isArray(raw)) {
+      pins = raw
+        .filter(
+          (p) =>
+            p &&
+            /^\d{5,25}$/.test(String(p.id)) &&
+            typeof p.img === "string" &&
+            p.img.startsWith("https://i.pinimg.com/")
+        )
+        .slice(0, 50)
+        .map((p) => ({
+          id: String(p.id),
+          title: String(p.title ?? "").slice(0, 120),
+          img: String(p.img),
+        }));
+    }
+  } catch {
+    // ignore malformed pin payloads — pins are optional
+  }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return bad("That email address doesn't look right.");
   }
@@ -101,6 +125,7 @@ export async function POST(request: Request) {
       budget: get("budget") || null,
       timeline: get("timeline") || null,
       description,
+      pins: pins.length ? JSON.stringify(pins) : null,
       status: "LEAD",
       createdAt: now,
     });

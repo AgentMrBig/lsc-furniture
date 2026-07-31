@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { site } from "@/lib/site";
+import { clearPins, removePin, useSelectedPins } from "@/lib/pin-selection";
 
 // On the static GitHub Pages preview there is no server: the form composes
 // an email instead of creating an account. The full deployment posts to
@@ -15,7 +17,7 @@ const ACCEPT = ".jpg,.jpeg,.png,.webp,.heic,.pdf,.dxf";
 
 type FormState = { status: "idle" | "success" | "error"; message: string };
 
-function composeMailto(form: HTMLFormElement): string {
+function composeMailto(form: HTMLFormElement, pinUrls: string[]): string {
   const fd = new FormData(form);
   const get = (k: string) => String(fd.get(k) ?? "").trim();
   const lines = [
@@ -34,6 +36,9 @@ function composeMailto(form: HTMLFormElement): string {
     "",
     "Idea:",
     get("description"),
+    ...(pinUrls.length
+      ? ["", "Inspiration pins I collected:", ...pinUrls.map((u) => `- ${u}`)]
+      : []),
     "",
     "(Attach your photos/sketches/drawings to this email before sending.)",
   ];
@@ -47,6 +52,7 @@ export default function QuoteForm() {
   const [pending, setPending] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [fileNames, setFileNames] = useState<string[]>([]);
+  const selectedPins = useSelectedPins();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,7 +60,11 @@ export default function QuoteForm() {
 
     if (IS_STATIC) {
       // Preview site: open the visitor's email client with everything filled in.
-      window.location.href = composeMailto(form);
+      window.location.href = composeMailto(
+        form,
+        selectedPins.map((p) => `https://www.pinterest.com/pin/${p.id}/`)
+      );
+      clearPins();
       setState({
         status: "success",
         message:
@@ -66,12 +76,15 @@ export default function QuoteForm() {
     setPending(true);
     setState({ status: "idle", message: "" });
     try {
+      const fd = new FormData(form);
+      fd.set("pins", JSON.stringify(selectedPins));
       const res = await fetch("/api/quote", {
         method: "POST",
-        body: new FormData(form),
+        body: fd,
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.ok) {
+        clearPins();
         setState({ status: "success", message: data.message });
       } else {
         setState({
@@ -186,6 +199,54 @@ export default function QuoteForm() {
             <input name="finish" className={inputClass} placeholder="e.g. natural oil, dark stain, painted" />
           </label>
         </div>
+      </section>
+
+      <section>
+        <h2 className="font-display text-lg font-medium">
+          Your collected ideas
+          {selectedPins.length > 0 && (
+            <span className="ml-2 rounded-full bg-brass/15 px-2.5 py-0.5 text-xs font-semibold text-brass">
+              {selectedPins.length}
+            </span>
+          )}
+        </h2>
+        {selectedPins.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">
+            No pins collected yet — browse the{" "}
+            <Link href="/ideas" className="text-brass hover:underline">
+              ideas gallery
+            </Link>{" "}
+            and click any design you love. It'll show up here automatically.
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-muted">
+              These come with your request so we can see the direction you want.
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-3">
+              {selectedPins.map((p) => (
+                <li key={p.id} className="group relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.img}
+                    alt={p.title || "Collected inspiration pin"}
+                    className="h-24 w-24 rounded-lg border border-line object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePin(p.id)}
+                    title="Remove this idea"
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background opacity-0 shadow transition-opacity group-hover:opacity-100"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       <section>

@@ -78,6 +78,8 @@ export const quoteRequest = sqliteTable("quote_request", {
   budget: text("budget"),
   timeline: text("timeline"),
   description: text("description").notNull(),
+  /** JSON array of Pinterest pins the customer collected: {id,title,img}[] */
+  pins: text("pins"),
   status: text("status").notNull().default("LEAD"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });

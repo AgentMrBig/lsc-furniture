@@ -23,6 +23,84 @@ type BoardKey = (typeof BOARD_META)[number]["key"];
 
 const MODAL_SEEN_KEY = "lsc-pin-modal-seen";
 
+/** Find the visible quote CTA: header button on desktop, tray CTA otherwise. */
+function findQuoteTarget(): HTMLElement | null {
+  return (
+    Array.from(document.querySelectorAll<HTMLAnchorElement>("header a")).find(
+      (a) => /quote/.test(a.getAttribute("href") ?? "") && a.offsetParent !== null
+    ) ?? document.getElementById("pin-tray-cta")
+  );
+}
+
+/**
+ * Fly a clone of the clicked pin image along an arc into the quote button,
+ * shrinking as it goes; the button pops when it "catches" the pin.
+ */
+function flyPinToQuote(imgEl: HTMLImageElement | null) {
+  if (!imgEl) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  // Defer a beat so the tray CTA exists when this is the first collected pin.
+  window.setTimeout(() => {
+    const target = findQuoteTarget();
+    if (!target) return;
+    const from = imgEl.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    if (!from.width || !to.width) return;
+
+    const clone = imgEl.cloneNode() as HTMLImageElement;
+    Object.assign(clone.style, {
+      position: "fixed",
+      left: `${from.left}px`,
+      top: `${from.top}px`,
+      width: `${from.width}px`,
+      height: `${from.height}px`,
+      objectFit: "cover",
+      borderRadius: "12px",
+      zIndex: "80",
+      pointerEvents: "none",
+      margin: "0",
+      boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+    });
+    document.body.appendChild(clone);
+
+    const endX = to.left + to.width / 2 - 16;
+    const endY = to.top + to.height / 2 - 16;
+    // quadratic bezier control point above the straight line = upward arc
+    const ctrlX = (from.left + endX) / 2;
+    const ctrlY = Math.min(from.top, endY) - 140;
+
+    const progress = { t: 0 };
+    const tl = gsap.timeline({
+      onComplete: () => {
+        clone.remove();
+        gsap.fromTo(
+          target,
+          { scale: 1.18 },
+          { scale: 1, duration: 0.4, ease: "back.out(3)" }
+        );
+      },
+    });
+    tl.to(
+      progress,
+      {
+        t: 1,
+        duration: 0.65,
+        ease: "power2.in",
+        onUpdate: () => {
+          const t = progress.t;
+          const mt = 1 - t;
+          clone.style.left = `${mt * mt * from.left + 2 * mt * t * ctrlX + t * t * endX}px`;
+          clone.style.top = `${mt * mt * from.top + 2 * mt * t * ctrlY + t * t * endY}px`;
+        },
+      },
+      0
+    )
+      .to(clone, { width: 32, height: 32, duration: 0.65, ease: "power2.in" }, 0)
+      .to(clone, { opacity: 0, duration: 0.18 }, 0.52);
+  }, 30);
+}
+
 /** Interleave the boards so the mix feels like one feed. */
 function interleave(limit?: number): Array<Pin & { board: BoardKey }> {
   const lists = BOARD_META.map((b) => ({
@@ -49,11 +127,14 @@ export default function PinGrid({ limit }: { limit?: number }) {
   const selectedIds = new Set(selected.map((p) => p.id));
   const pins = interleave(limit).filter((p) => filter === "all" || p.board === filter);
 
-  function onPinClick(pin: Pin) {
+  function onPinClick(pin: Pin, imgEl: HTMLImageElement | null) {
     const added = togglePin({ id: pin.id, title: pin.title, img: pin.img });
-    if (added && !window.localStorage.getItem(MODAL_SEEN_KEY)) {
+    if (!added) return;
+    flyPinToQuote(imgEl);
+    if (!window.localStorage.getItem(MODAL_SEEN_KEY)) {
       window.localStorage.setItem(MODAL_SEEN_KEY, "1");
-      setShowModal(true);
+      // let the flight land before the modal takes over
+      window.setTimeout(() => setShowModal(true), 750);
     }
   }
 
@@ -79,7 +160,7 @@ export default function PinGrid({ limit }: { limit?: number }) {
             <button
               key={`${p.board}-${p.id}`}
               type="button"
-              onClick={() => onPinClick(p)}
+              onClick={(e) => onPinClick(p, e.currentTarget.querySelector("img"))}
               aria-pressed={isSelected}
               className={`group relative mb-4 block w-full overflow-hidden rounded-xl bg-surface text-left transition-all ${
                 isSelected

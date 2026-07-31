@@ -13,10 +13,11 @@ const featured = [
 ];
 
 const process = [
-  { n: "01", title: "Share your idea", desc: "Tell us what you need, the space it lives in, and the style you love — sketches, photos, and Pinterest pins all welcome." },
-  { n: "02", title: "Design & quote", desc: "We work up a design and a clear quote together. You'll know exactly what you're getting and what it costs." },
-  { n: "03", title: "Built by hand", desc: "Once the deposit is in, your piece gets built — real joinery, premium materials, finished to last." },
-  { n: "04", title: "Delivered home", desc: "We deliver and place it. You get furniture no one else in the world has." },
+  { n: "01", title: "Share your idea", desc: "Tell us what you need, the space it lives in, and the style you love — collected pins, sketches, and photos all welcome." },
+  { n: "02", title: "Preliminary quote", desc: "We review your request and send a preliminary quote, so you know the ballpark before anything else happens." },
+  { n: "03", title: "See your design", desc: "Like the number? We draft your piece digitally — precise AutoCAD drawings, plus a 3D model when the design deserves it — and you approve it before we build." },
+  { n: "04", title: "Deposit & contract", desc: "Once you approve the design, a 50% deposit and our standard agreement lock in your build slot. Everything in writing, no surprises." },
+  { n: "05", title: "Built & delivered", desc: "Real joinery, premium materials, finished to last — then delivered and placed in your home." },
 ];
 
 export default function Home() {
@@ -112,7 +113,7 @@ export default function Home() {
         <h2 id="process" className="font-display text-3xl font-medium tracking-tight">
           From idea to heirloom
         </h2>
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {process.map((s) => (
             <div key={s.n}>
               <span className="font-display text-4xl font-light text-brass/50">{s.n}</span>

@@ -7,6 +7,7 @@ import {
   HAPPY_PATH,
   STATE_DESCRIPTIONS,
   STATE_LABELS,
+  STATE_SHORT,
   isCustomerState,
   type CustomerState,
 } from "@/lib/customer-state";
@@ -75,7 +76,7 @@ export default async function AccountPage() {
         <p className="mt-1 text-sm text-muted">{STATE_DESCRIPTIONS[state]}</p>
 
         {happyIndex >= 0 ? (
-          <ol className="mt-6 grid gap-2 sm:grid-cols-7">
+          <ol className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-9 sm:gap-2">
             {HAPPY_PATH.map((s, i) => (
               <li key={s} className="flex flex-col items-center gap-2 text-center">
                 <span
@@ -90,7 +91,7 @@ export default async function AccountPage() {
                   {i < happyIndex ? "✓" : i + 1}
                 </span>
                 <span className={`text-[11px] leading-tight ${i === happyIndex ? "font-semibold" : "text-muted"}`}>
-                  {STATE_LABELS[s].replace("Customer (", "").replace(")", "")}
+                  {STATE_SHORT[s]}
                 </span>
               </li>
             ))}

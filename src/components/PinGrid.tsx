@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import pinData from "@/data/pinterest-pins.json";
 import { site } from "@/lib/site";
@@ -23,26 +24,31 @@ type BoardKey = (typeof BOARD_META)[number]["key"];
 
 const MODAL_SEEN_KEY = "lsc-pin-modal-seen";
 
-/** Find the visible quote CTA: header button on desktop, tray CTA otherwise. */
-function findQuoteTarget(): HTMLElement | null {
+/** The header's Request a Quote button (visible on desktop only). */
+function findHeaderQuoteButton(): HTMLElement | null {
   return (
     Array.from(document.querySelectorAll<HTMLAnchorElement>("header a")).find(
       (a) => /quote/.test(a.getAttribute("href") ?? "") && a.offsetParent !== null
-    ) ?? document.getElementById("pin-tray-cta")
+    ) ?? null
   );
 }
 
+/** The floating collection tray (exists once at least one pin is collected). */
+function findTray(): HTMLElement | null {
+  return document.getElementById("pin-tray");
+}
+
 /**
- * Fly a clone of the clicked pin image along an arc into the quote button,
- * shrinking as it goes; the button pops when it "catches" the pin.
+ * Fly a clone of the clicked pin image along an arc down into the collection
+ * tray, shrinking as it goes; the tray pops as it "catches" the pin.
  */
-function flyPinToQuote(imgEl: HTMLImageElement | null) {
+function flyPinToTray(imgEl: HTMLImageElement | null) {
   if (!imgEl) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  // Defer a beat so the tray CTA exists when this is the first collected pin.
+  // Defer a beat so the tray exists when this is the first collected pin.
   window.setTimeout(() => {
-    const target = findQuoteTarget();
+    const target = findTray();
     if (!target) return;
     const from = imgEl.getBoundingClientRect();
     const to = target.getBoundingClientRect();
@@ -122,7 +128,7 @@ function interleave(limit?: number): Array<Pin & { board: BoardKey }> {
 export default function PinGrid({ limit }: { limit?: number }) {
   const [filter, setFilter] = useState<BoardKey | "all">("all");
   const [showModal, setShowModal] = useState(false);
-  const [showArrow, setShowArrow] = useState(false);
+  const [arrowMode, setArrowMode] = useState<false | "tray" | "quote">(false);
   const selected = useSelectedPins();
   const selectedIds = new Set(selected.map((p) => p.id));
   const pins = interleave(limit).filter((p) => filter === "all" || p.board === filter);
@@ -130,7 +136,7 @@ export default function PinGrid({ limit }: { limit?: number }) {
   function onPinClick(pin: Pin, imgEl: HTMLImageElement | null) {
     const added = togglePin({ id: pin.id, title: pin.title, img: pin.img });
     if (!added) return;
-    flyPinToQuote(imgEl);
+    flyPinToTray(imgEl);
     if (!window.localStorage.getItem(MODAL_SEEN_KEY)) {
       window.localStorage.setItem(MODAL_SEEN_KEY, "1");
       // let the flight land before the modal takes over
@@ -237,12 +243,21 @@ export default function PinGrid({ limit }: { limit?: number }) {
         <FirstPinModal
           onClose={() => {
             setShowModal(false);
-            setShowArrow(true);
+            setArrowMode("tray");
           }}
         />
       )}
-      {showArrow && <GuideArrow onDone={() => setShowArrow(false)} />}
-      <SelectionTray selected={selected} />
+      {arrowMode && (
+        <GuideArrow
+          key={arrowMode} // remount when the mode flips so the arrow re-aims
+          mode={arrowMode}
+          onDone={() => setArrowMode(false)}
+        />
+      )}
+      <SelectionTray
+        selected={selected}
+        onAttach={() => setArrowMode("quote")}
+      />
     </div>
   );
 }
@@ -320,19 +335,20 @@ function FirstPinModal({ onClose }: { onClose: () => void }) {
 }
 
 /**
- * GSAP-animated arrow that draws itself pointing at the "Request a Quote"
- * button (header on desktop, the selection tray on mobile), then fades out.
+ * GSAP-animated arrow that draws itself pointing at a target, then fades out.
+ * mode "tray"  — shoots DOWN at the pin collection tray (first-pin guidance)
+ * mode "quote" — shoots UP at the header's Request a Quote button
  */
-function GuideArrow({ onDone }: { onDone: () => void }) {
+function GuideArrow({ mode, onDone }: { mode: "tray" | "quote"; onDone: () => void }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const headRef = useRef<SVGPathElement>(null);
 
   useEffect(() => {
-    const headerBtn = Array.from(document.querySelectorAll<HTMLAnchorElement>("header a")).find(
-      (a) => /quote/.test(a.getAttribute("href") ?? "") && a.offsetParent !== null
-    );
-    const target = headerBtn ?? document.getElementById("pin-tray-cta");
+    const target =
+      mode === "quote"
+        ? findHeaderQuoteButton()
+        : (findTray() ?? findHeaderQuoteButton());
     const svg = svgRef.current;
     const path = pathRef.current;
     const head = headRef.current;
@@ -380,10 +396,12 @@ function GuideArrow({ onDone }: { onDone: () => void }) {
         onDone();
       },
     });
-    tl.to(path, { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" })
+    // the "quote" arrow plays quicker — it runs right before navigation
+    const quick = mode === "quote";
+    tl.to(path, { strokeDashoffset: 0, duration: quick ? 0.45 : 0.8, ease: "power2.inOut" })
       .to(head, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, "-=0.1")
-      .to(svg, { y: pointingUp ? -8 : 8, duration: 0.35, yoyo: true, repeat: 3, ease: "sine.inOut" })
-      .to(svg, { opacity: 0, duration: 0.5, delay: 0.6 });
+      .to(svg, { y: pointingUp ? -8 : 8, duration: 0.35, yoyo: true, repeat: quick ? 1 : 3, ease: "sine.inOut" })
+      .to(svg, { opacity: 0, duration: quick ? 0.25 : 0.5, delay: quick ? 0 : 0.6 });
 
     return () => {
       tl.kill();
@@ -419,10 +437,29 @@ function GuideArrow({ onDone }: { onDone: () => void }) {
 }
 
 /** Floating tray showing the collected ideas with a path to the quote form. */
-function SelectionTray({ selected }: { selected: SelectedPin[] }) {
+function SelectionTray({
+  selected,
+  onAttach,
+}: {
+  selected: SelectedPin[];
+  onAttach: () => void;
+}) {
+  const router = useRouter();
   if (selected.length === 0) return null;
+
+  function handleAttach(e: React.MouseEvent) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Fire the up-arrow to the header quote button, then follow it there.
+    if (!reduced && findHeaderQuoteButton()) {
+      e.preventDefault();
+      onAttach();
+      window.setTimeout(() => router.push("/quote"), 1150);
+    }
+    // No visible header button (mobile) or reduced motion: navigate normally.
+  }
+
   return (
-    <div className="fixed bottom-5 left-1/2 z-[60] w-[min(94vw,480px)] -translate-x-1/2">
+    <div id="pin-tray" className="fixed bottom-5 left-1/2 z-[60] w-[min(94vw,480px)] -translate-x-1/2">
       <div className="flex items-center gap-3 rounded-full border border-brass/40 bg-background/95 py-2 pl-3 pr-2 shadow-xl backdrop-blur">
         <div className="flex -space-x-2" aria-hidden="true">
           {selected.slice(-4).map((p) => (
@@ -450,6 +487,7 @@ function SelectionTray({ selected }: { selected: SelectedPin[] }) {
         <Link
           id="pin-tray-cta"
           href="/quote"
+          onClick={handleAttach}
           className="rounded-full bg-walnut px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-brass"
         >
           Attach to Quote →

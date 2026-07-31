@@ -1,2 +1,2 @@
-:HL["/lsc-furniture/_next/static/chunks/3cs401ahvxgcr.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"OfE9r-kC8em71UW8LeaBe"}
+:HL["/lsc-furniture/_next/static/chunks/1w-rkum1irdvg.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"9zJoClDK8gu6U9VjPyr-g"}

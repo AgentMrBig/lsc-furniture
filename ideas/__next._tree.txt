@@ -1,4 +1,4 @@
-:HL["/lsc-furniture/_next/static/chunks/124d5h63th519.css","style"]
+:HL["/lsc-furniture/_next/static/chunks/3cs401ahvxgcr.css","style"]
 :HL["/lsc-furniture/_next/static/media/791bf8c4bb753ed6-s.p.0ggqn9ig56u4s.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/lsc-furniture/_next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"ideas","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"GMl70Y0QxKfFiYCmw0_zv"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"ideas","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"OfE9r-kC8em71UW8LeaBe"}

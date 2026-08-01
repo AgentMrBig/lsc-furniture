@@ -55,6 +55,9 @@ function flyPinToTray(imgEl: HTMLImageElement | null) {
     if (!from.width || !to.width) return;
 
     const clone = imgEl.cloneNode() as HTMLImageElement;
+    // strip the tile's classes — `transition-all` would fight GSAP's
+    // per-frame positioning and make the clone lag behind its real spot
+    clone.className = "";
     Object.assign(clone.style, {
       position: "fixed",
       left: `${from.left}px`,
@@ -63,9 +66,11 @@ function flyPinToTray(imgEl: HTMLImageElement | null) {
       height: `${from.height}px`,
       objectFit: "cover",
       borderRadius: "12px",
-      zIndex: "80",
+      zIndex: "100",
       pointerEvents: "none",
       margin: "0",
+      transition: "none",
+      willChange: "left, top, width, height, opacity",
       boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
     });
     document.body.appendChild(clone);
@@ -77,6 +82,7 @@ function flyPinToTray(imgEl: HTMLImageElement | null) {
     const ctrlY = Math.min(from.top, endY) - 140;
 
     const progress = { t: 0 };
+    const FLIGHT = 0.7;
     const tl = gsap.timeline({
       onComplete: () => {
         clone.remove();
@@ -91,8 +97,8 @@ function flyPinToTray(imgEl: HTMLImageElement | null) {
       progress,
       {
         t: 1,
-        duration: 0.65,
-        ease: "power2.in",
+        duration: FLIGHT,
+        ease: "power1.inOut",
         onUpdate: () => {
           const t = progress.t;
           const mt = 1 - t;
@@ -102,8 +108,9 @@ function flyPinToTray(imgEl: HTMLImageElement | null) {
       },
       0
     )
-      .to(clone, { width: 32, height: 32, duration: 0.65, ease: "power2.in" }, 0)
-      .to(clone, { opacity: 0, duration: 0.18 }, 0.52);
+      .to(clone, { width: 32, height: 32, duration: FLIGHT, ease: "power1.inOut" }, 0)
+      // stay fully visible for the whole flight; quick pop-fade ON the button
+      .to(clone, { opacity: 0, scale: 0.4, duration: 0.15, ease: "power2.in" }, FLIGHT);
   }, 30);
 }
 
